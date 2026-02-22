@@ -44,12 +44,12 @@ LinkUp (Microservices)
 git clone <repo> && cd LinkUp
 
 # Lancer PostgreSQL
-docker-compose up -d
+docker compose up -d
 
 # Compiler la solution
 dotnet build
 
-# Migrations (à faire après création des DbContext)
+# Appliquer migrations EF Core
 dotnet ef database update --project src/AuthService
 dotnet ef database update --project src/BusinessService
 
@@ -57,6 +57,16 @@ dotnet ef database update --project src/BusinessService
 dotnet run --project src/AuthService
 dotnet run --project src/BusinessService
 dotnet run --project src/NotificationService
+```
+
+### Vérification
+
+```bash
+# Vérifier que Postgres est accessible
+docker compose ps
+
+# Vérifier les logs
+docker compose logs postgres
 ```
 
 ## 📚 Structure des dossiers
