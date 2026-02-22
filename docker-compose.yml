@@ -1,0 +1,27 @@
+version: '3.8'
+
+# T010: PostgreSQL 16+ Configuration
+# Fournit une base de données partagée pour AuthService et BusinessService
+# Conteneur : postgres:16-alpine (léger, conforme stack.csv)
+# Note : À remplacer par un vrai cluster Postgres en production (T060 Kubernetes)
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: linkup-postgres
+    environment:
+      POSTGRES_USER: linkup_user
+      POSTGRES_PASSWORD: linkup_password_123
+      POSTGRES_DB: linkup_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U linkup_user -d linkup_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

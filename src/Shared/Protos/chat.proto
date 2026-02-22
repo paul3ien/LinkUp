@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package LinkUp.Chat;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// T002: Communication chat en temps réel via gRPC
+// Utilisé par : NotificationService (server), BusinessService (client), Frontend (gRPC-Web)
+
+service ChatService {
+  // T033: BusinessService envoie messages → NotificationService
+  rpc BroadcastMessage(Message) returns (google.protobuf.Empty);
+  
+  // T055: Frontend s'abonne aux messages d'un channel
+  rpc Subscribe(SubscribeRequest) returns (stream Message);
+}
+
+// T030: Entité Channel
+message Channel {
+  string id = 1;
+  string name = 2;
+  string created_by = 3;
+  google.protobuf.Timestamp created_at = 4;
+}
+
+// T032: Entité Message - persistée en DB
+message Message {
+  string id = 1;
+  string channel_id = 2;
+  string user_id = 3;
+  string content = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
+
+// T055: Request pour s'abonner à un channel
+message SubscribeRequest {
+  string channel_id = 1;
+  string user_id = 2;
+}

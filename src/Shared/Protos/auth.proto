@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package LinkUp.Auth;
+
+// T002: Authentification messages
+// Utilisé par : AuthService (definition), autres services (import)
+
+service AuthService {
+  // À implémenter lors de T040 (gRPC Server)
+}
+
+// T021: Registration & Login request payload
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+// T022: JWT Token response
+message LoginResponse {
+  string token = 1;
+  string user_id = 2;
+  string email = 3;
+}

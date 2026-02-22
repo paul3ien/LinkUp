@@ -1,0 +1,79 @@
+# Build Results
+bin/
+obj/
+Debug/
+Release/
+x64/
+x86/
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+.nuget/
+
+# Visual Studio
+.vs/
+.vsconfig
+*.sln.user
+*.user
+*.userosscache
+*.sln.docstates
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# JetBrains Rider
+.idea/
+.idea_modules/
+*.sln.iml
+riderModule.xml
+
+# Entity Framework Migrations (temporary)
+Migrations/obj/
+Migrations/bin/
+
+# Database files (local development)
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+*.logs
+
+# Runtime
+appsettings.Development.*.json.local
+
+# Docker
+docker-compose.override.yml
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Frontend (Angular)
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# Generated gRPC files (rebuilds at compile)
+src/**/obj/Protos/*.cs
+
+# Secrets/Certificates
+*.pfx
+*.key
+*.pem
+*.crt
+
+# Temporary files
+*.tmp
+*.temp
+~*
