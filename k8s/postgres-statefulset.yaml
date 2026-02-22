@@ -1,0 +1,125 @@
+# T060: PostgreSQL StatefulSets with PVCs + ClusterIP Services
+# AuthService DB
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-auth
+  namespace: linkup
+spec:
+  serviceName: postgres-auth
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-auth
+  template:
+    metadata:
+      labels:
+        app: postgres-auth
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: linkup_auth
+            - name: POSTGRES_USER
+              value: auth_user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: linkup-secrets
+                  key: auth-db-password
+          volumeMounts:
+            - name: auth-data
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "auth_user", "-d", "linkup_auth"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+  volumeClaimTemplates:
+    - metadata:
+        name: auth-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-auth
+  namespace: linkup
+spec:
+  selector:
+    app: postgres-auth
+  clusterIP: None   # headless for StatefulSet DNS
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+# BusinessService DB
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-business
+  namespace: linkup
+spec:
+  serviceName: postgres-business
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-business
+  template:
+    metadata:
+      labels:
+        app: postgres-business
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: linkup_business
+            - name: POSTGRES_USER
+              value: business_user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: linkup-secrets
+                  key: business-db-password
+          volumeMounts:
+            - name: business-data
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "business_user", "-d", "linkup_business"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+  volumeClaimTemplates:
+    - metadata:
+        name: business-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-business
+  namespace: linkup
+spec:
+  selector:
+    app: postgres-business
+  clusterIP: None
+  ports:
+    - port: 5432
+      targetPort: 5432

@@ -1,0 +1,61 @@
+# T062 (extension): Frontend deployment + Service + Ingress route for / → frontend
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: linkup
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: linkup/frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-svc
+  namespace: linkup
+spec:
+  selector:
+    app: frontend
+  ports:
+    - port: 80
+      targetPort: 80
+---
+# Ingress route for the frontend (catch-all at /)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: linkup-frontend-ingress
+  namespace: linkup
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: k8s.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-svc
+                port:
+                  number: 80

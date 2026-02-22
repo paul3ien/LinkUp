@@ -1,0 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* T050: LinkUp global styles */
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; font-family: 'Inter', sans-serif; }

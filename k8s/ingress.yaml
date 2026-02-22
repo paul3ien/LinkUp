@@ -1,0 +1,65 @@
+# T062: Nginx Ingress Controller configuration
+# Routes:
+#   /api/auth  -> AuthService  (HTTP/1.1 REST)
+#   /api       -> BusinessService (HTTP/1.1 REST)
+#   /grpc      -> NotificationService (HTTP/2 gRPC-Web)
+# Domain: k8s.local  (add to /etc/hosts: <node-ip> k8s.local)
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: linkup-ingress
+  namespace: linkup
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    # gRPC backend for the notification service path
+    # (applied per-path via separate Ingress resource below)
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: k8s.local
+      http:
+        paths:
+          # /api/auth/** → AuthService
+          - path: /api/auth(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: auth-svc
+                port:
+                  number: 80
+          # /api/** → BusinessService  (order matters: more-specific first)
+          - path: /api(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: business-svc
+                port:
+                  number: 80
+---
+# Separate Ingress for gRPC-Web (requires backend-protocol: GRPC annotation)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: linkup-grpc-ingress
+  namespace: linkup
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    # Allow gRPC-Web Content-Type headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      grpc_set_header Content-Type $content_type;
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: k8s.local
+      http:
+        paths:
+          # /grpc/** → NotificationService (gRPC)
+          - path: /grpc
+            pathType: Prefix
+            backend:
+              service:
+                name: notification-svc
+                port:
+                  number: 5000

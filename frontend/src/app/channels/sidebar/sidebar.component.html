@@ -1,0 +1,20 @@
+<!-- T054: Sidebar with channel list -->
+<aside class="flex flex-col h-full bg-indigo-900 text-white">
+  <div class="px-4 py-5 border-b border-indigo-800">
+    <h1 class="text-xl font-bold tracking-wide">LinkUp</h1>
+  </div>
+
+  <nav class="flex-1 overflow-y-auto py-3">
+    <p class="px-4 text-xs uppercase tracking-widest text-indigo-400 mb-2">Channels</p>
+    <ul>
+      <li *ngFor="let ch of channels">
+        <button (click)="selectChannel(ch)"
+          [class.bg-indigo-700]="isActive(ch)"
+          class="w-full text-left px-4 py-2 text-sm hover:bg-indigo-800 transition flex items-center gap-2">
+          <span class="text-indigo-300">#</span> {{ ch.name }}
+        </button>
+      </li>
+    </ul>
+    <p *ngIf="channels.length === 0" class="px-4 text-xs text-indigo-400 mt-4">Aucun channel</p>
+  </nav>
+</aside>

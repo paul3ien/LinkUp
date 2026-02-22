@@ -1,0 +1,200 @@
+# T061: Deployments + ClusterIP Services for AuthService, BusinessService, NotificationService
+---
+##############################################
+#  AuthService
+##############################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: linkup
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          image: linkup/auth-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+            - name: ASPNETCORE_ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: linkup-config
+                  key: ASPNETCORE_ENVIRONMENT
+            - name: ConnectionStrings__DefaultConnection
+              value: "Host=postgres-auth;Port=5432;Database=linkup_auth;Username=auth_user;Password=$(AUTH_DB_PASSWORD)"
+            - name: AUTH_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: linkup-secrets
+                  key: auth-db-password
+            - name: Jwt__Secret
+              valueFrom:
+                secretKeyRef:
+                  name: linkup-secrets
+                  key: jwt-secret
+            - name: Jwt__Issuer
+              value: "LinkUp"
+            - name: Jwt__Audience
+              value: "LinkUpUsers"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-svc
+  namespace: linkup
+spec:
+  selector:
+    app: auth-service
+  ports:
+    - port: 80
+      targetPort: 8080
+---
+##############################################
+#  BusinessService
+##############################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: business-service
+  namespace: linkup
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: business-service
+  template:
+    metadata:
+      labels:
+        app: business-service
+    spec:
+      containers:
+        - name: business-service
+          image: linkup/business-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+            - name: ASPNETCORE_ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: linkup-config
+                  key: ASPNETCORE_ENVIRONMENT
+            - name: ConnectionStrings__DefaultConnection
+              value: "Host=postgres-business;Port=5432;Database=linkup_business;Username=business_user;Password=$(BUSINESS_DB_PASSWORD)"
+            - name: BUSINESS_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: linkup-secrets
+                  key: business-db-password
+            - name: Jwt__Secret
+              valueFrom:
+                secretKeyRef:
+                  name: linkup-secrets
+                  key: jwt-secret
+            - name: GrpcClients__NotificationService
+              value: "http://notification-svc:5000"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: business-svc
+  namespace: linkup
+spec:
+  selector:
+    app: business-service
+  ports:
+    - port: 80
+      targetPort: 8080
+---
+##############################################
+#  NotificationService (gRPC-Web, HTTP/2)
+##############################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+  namespace: linkup
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+    spec:
+      containers:
+        - name: notification-service
+          image: linkup/notification-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: grpc
+              containerPort: 5000
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: linkup-config
+                  key: ASPNETCORE_ENVIRONMENT
+          readinessProbe:
+            grpc:
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            grpc:
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-svc
+  namespace: linkup
+spec:
+  selector:
+    app: notification-service
+  ports:
+    - name: grpc
+      port: 5000
+      targetPort: 5000

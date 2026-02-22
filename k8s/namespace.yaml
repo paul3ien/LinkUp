@@ -1,0 +1,33 @@
+# T060-T062: LinkUp Kubernetes namespace + shared config/secrets
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: linkup
+  labels:
+    app.kubernetes.io/name: linkup
+---
+# ConfigMap: non-sensitive env vars shared across services
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: linkup-config
+  namespace: linkup
+data:
+  AUTH_DB_HOST: "postgres-auth"
+  BUSINESS_DB_HOST: "postgres-business"
+  NOTIFICATION_GRPC_HOST: "notification-svc"
+  NOTIFICATION_GRPC_PORT: "5000"
+  ASPNETCORE_ENVIRONMENT: "Production"
+---
+# Secret: sensitive values (base64-encoded for demo – use a proper secret manager in prod)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: linkup-secrets
+  namespace: linkup
+type: Opaque
+stringData:
+  auth-db-password: "auth_password_change_me"
+  business-db-password: "business_password_change_me"
+  jwt-secret: "linkup-super-secret-jwt-key-change-in-production"
