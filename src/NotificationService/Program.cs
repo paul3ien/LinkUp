@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 // T040: gRPC over plaintext HTTP/2 so grpcurl/grpcui can connect (localhost)
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-    serverOptions.ListenLocalhost(5000, listenOptions =>
+    serverOptions.ListenLocalhost(7002, listenOptions =>
     {
         listenOptions.Protocols = HttpProtocols.Http2;
     });

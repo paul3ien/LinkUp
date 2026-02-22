@@ -10,6 +10,15 @@ global using AuthService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure Kestrel to use port 7000 for HTTP
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.ListenLocalhost(7000, listenOptions =>
+    {
+        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1;
+    });
+});
+
 // T010: Configuration EF Core + Npgsql (PostgreSQL)
 // Lecture ConnectionString depuis appsettings.json
 // DbContext : AuthDbContext
