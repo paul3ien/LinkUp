@@ -53,7 +53,7 @@ public class ChatClientTests
 
         // Act & Assert - Should not throw
         var result = await _client.BroadcastMessageAsync(channelId, messageId, userId, content);
-        Assert.NotNull(result);
+        Assert.True(result);
     }
 
     [Fact]

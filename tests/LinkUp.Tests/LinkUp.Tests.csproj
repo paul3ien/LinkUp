@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="../../src/AuthService/AuthService.csproj" />
     <ProjectReference Include="../../src/BusinessService/BusinessService.csproj" />
+    <ProjectReference Include="../../src/NotificationService/NotificationService.csproj" />
     <ProjectReference Include="../../src/Shared/Shared.csproj" />
   </ItemGroup>
 
