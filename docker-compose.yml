@@ -1,5 +1,3 @@
-version: '3.8'
-
 # T010: PostgreSQL 16+ Configuration
 # Fournit une base de données partagée pour AuthService et BusinessService
 # Conteneur : postgres:16-alpine (léger, conforme stack.csv)
