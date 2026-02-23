@@ -38,7 +38,7 @@ describe('AuthService', () => {
   // --- login ---
   it('should POST to /api/auth/login with credentials', () => {
     service.login('a@b.com', 'pass').subscribe();
-    const req = http.expectOne('http://localhost:5001/api/auth/login');
+    const req = http.expectOne('http://localhost:7000/api/auth/login');
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({ email: 'a@b.com', password: 'pass' });
     req.flush({ token: 'tok', userId: 'uid1', email: 'a@b.com' });
@@ -46,7 +46,7 @@ describe('AuthService', () => {
 
   it('should store token and userId in localStorage on successful login', fakeAsync(() => {
     service.login('a@b.com', 'pass').subscribe();
-    http.expectOne('http://localhost:5001/api/auth/login')
+    http.expectOne('http://localhost:7000/api/auth/login')
         .flush({ token: 'my-jwt', userId: 'u42', email: 'a@b.com' });
     tick();
     expect(localStorage.getItem('lu_token')).toBe('my-jwt');

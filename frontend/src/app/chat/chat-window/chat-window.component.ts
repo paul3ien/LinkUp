@@ -32,7 +32,7 @@ export class ChatWindowComponent implements AfterViewChecked {
     const channelId = this.chatService.currentChannelId;
     if (!this.draft.trim() || !channelId) return;
     const body: SendMessageDto = { content: this.draft };
-    this.http.post(`http://localhost:5002/api/channels/${channelId}/messages`, body).subscribe();
+    this.http.post(`http://localhost:7001/api/channels/${channelId}/messages`, body).subscribe();
     this.draft = '';
   }
 

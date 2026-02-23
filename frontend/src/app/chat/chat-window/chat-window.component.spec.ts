@@ -51,20 +51,22 @@ describe('ChatWindowComponent', () => {
   it('should not send when draft is empty', () => {
     component.draft = '';
     component.send();
-    controller.expectNone((req) => true);
+    controller.expectNone((req) => req.method === 'POST');
+    expect(component.draft).toBe('');
   });
 
   it('should not send when no channel is selected', () => {
     Object.defineProperty(chatService, 'currentChannelId', { get: () => null, configurable: true });
     component.draft = 'hello';
     component.send();
-    controller.expectNone((req) => true);
+    controller.expectNone((req) => req.method === 'POST');
+    expect(component.draft).toBe('hello'); // draft unchanged
   });
 
   it('should POST message content to the correct channel endpoint', () => {
     component.draft = 'Hello world';
     component.send();
-    const req = controller.expectOne('http://localhost:5002/api/channels/chan-1/messages');
+    const req = controller.expectOne('http://localhost:7001/api/channels/chan-1/messages');
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({ content: 'Hello world' });
     req.flush({});
@@ -73,7 +75,7 @@ describe('ChatWindowComponent', () => {
   it('should clear draft after sending', () => {
     component.draft = 'test message';
     component.send();
-    controller.expectOne('http://localhost:5002/api/channels/chan-1/messages').flush({});
+    controller.expectOne('http://localhost:7001/api/channels/chan-1/messages').flush({});
     expect(component.draft).toBe('');
   });
 

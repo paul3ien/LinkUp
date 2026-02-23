@@ -31,12 +31,26 @@ builder.Services.AddDbContext<AuthDbContext>(options =>
 builder.Services.AddScoped<IAuthService, AuthenticationService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 
+// T070: CORS Configuration - Allow frontend (localhost:4200) to call this API
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:4200", "http://localhost:3000")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
 builder.Services.AddControllers();
 builder.Services.AddLogging();
 
 var app = builder.Build();
 
 app.UseHttpsRedirection();
+// T070: CORS Middleware must come before Authentication/Authorization
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

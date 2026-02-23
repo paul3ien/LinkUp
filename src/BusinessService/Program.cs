@@ -64,10 +64,24 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
 
+// T070: CORS Configuration - Allow frontend (localhost:4200) to call this API
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:4200", "http://localhost:3000")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
 var app = builder.Build();
 
 app.UseHttpsRedirection();
 
+// T070: CORS Middleware must come before Authentication/Authorization
+app.UseCors();
 // T032: Authentication Middleware
 app.UseAuthentication();
 app.UseAuthorization();
