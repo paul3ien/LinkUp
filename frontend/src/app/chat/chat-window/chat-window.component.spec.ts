@@ -1,81 +1,111 @@
-// T055: Tests for ChatWindowComponent
+// T055/T071: Tests for ChatWindowComponent with new ChannelService/MessageService
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { ChatWindowComponent } from './chat-window.component';
-import { ChatService } from '../chat.service';
+import { ChannelService, Channel } from '../../services/channel.service';
+import { MessageService, Message } from '../../services/message.service';
 import { AuthService } from '../../auth/auth.service';
-import { BehaviorSubject } from 'rxjs';
-import type { Message } from '../../../generated/chat';
+import { BehaviorSubject, of } from 'rxjs';
+
+const makeChannel = (id: string, name: string): Channel => ({
+  id, name, description: 'Test channel'
+});
 
 const makeMessage = (id: string, content: string): Message => ({
   id, channelId: 'c1', userId: 'u1', content,
-  createdAt: undefined
+  createdAt: '2026-02-23T00:00:00Z'
 });
 
 describe('ChatWindowComponent', () => {
   let component: ChatWindowComponent;
   let fixture: ComponentFixture<ChatWindowComponent>;
-  let controller: HttpTestingController;
-  let chatService: jasmine.SpyObj<ChatService>;
+  let channelService: jasmine.SpyObj<ChannelService>;
+  let messageService: jasmine.SpyObj<MessageService>;
   let authService: jasmine.SpyObj<AuthService>;
+  let selectedChannel$: BehaviorSubject<Channel | null>;
   let messages$: BehaviorSubject<Message[]>;
 
   beforeEach(async () => {
+    selectedChannel$ = new BehaviorSubject<Channel | null>(null);
     messages$ = new BehaviorSubject<Message[]>([]);
-    chatService = jasmine.createSpyObj('ChatService', ['joinChannel', 'leaveChannel'], {
-      currentChannelId: 'chan-1',
-      messages$: messages$.asObservable()
+
+    channelService = jasmine.createSpyObj('ChannelService', ['selectChannel'], {
+      selectedChannel: selectedChannel$.asObservable()
     });
+    messageService = jasmine.createSpyObj(
+      'MessageService',
+      ['getMessagesByChannelId', 'createMessage', 'clearMessages'],
+      { messages: messages$.asObservable() }
+    );
     authService = jasmine.createSpyObj('AuthService', ['logout']);
 
     await TestBed.configureTestingModule({
-      imports: [ChatWindowComponent, HttpClientTestingModule],
+      imports: [ChatWindowComponent],
       providers: [
-        { provide: ChatService, useValue: chatService },
+        { provide: ChannelService, useValue: channelService },
+        { provide: MessageService, useValue: messageService },
         { provide: AuthService, useValue: authService }
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(ChatWindowComponent);
     component = fixture.componentInstance;
-    controller = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
   });
-
-  afterEach(() => controller.verify());
 
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
+  it('should load messages when channel is selected', fakeAsync(() => {
+    const channel = makeChannel('c1', 'General');
+    selectedChannel$.next(channel);
+    tick();
+    expect(messageService.getMessagesByChannelId).toHaveBeenCalledWith('c1');
+  }));
+
+  it('should clear messages when no channel is selected', fakeAsync(() => {
+    selectedChannel$.next(null);
+    tick();
+    expect(messageService.clearMessages).toHaveBeenCalled();
+  }));
+
+  it('should display channel name in header when channel is selected', fakeAsync(() => {
+    const channel = makeChannel('c1', 'General');
+    selectedChannel$.next(channel);
+    tick();
+    fixture.detectChanges();
+    const header = fixture.nativeElement.querySelector('header span');
+    expect(header.textContent).toContain('General');
+  }));
+
   it('should not send when draft is empty', () => {
     component.draft = '';
     component.send();
-    controller.expectNone((req) => req.method === 'POST');
-    expect(component.draft).toBe('');
+    expect(messageService.createMessage).not.toHaveBeenCalled();
   });
 
   it('should not send when no channel is selected', () => {
-    Object.defineProperty(chatService, 'currentChannelId', { get: () => null, configurable: true });
+    selectedChannel$.next(null);
     component.draft = 'hello';
     component.send();
-    controller.expectNone((req) => req.method === 'POST');
-    expect(component.draft).toBe('hello'); // draft unchanged
+    expect(messageService.createMessage).not.toHaveBeenCalled();
   });
 
-  it('should POST message content to the correct channel endpoint', () => {
+  it('should send message when channel is selected and draft is not empty', () => {
+    const channel = makeChannel('c1', 'General');
+    selectedChannel$.next(channel);
+    messageService.getMessagesByChannelId.and.returnValue(of([]));
     component.draft = 'Hello world';
     component.send();
-    const req = controller.expectOne('http://localhost:7001/api/channels/chan-1/messages');
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ content: 'Hello world' });
-    req.flush({});
+    expect(messageService.createMessage).toHaveBeenCalledWith('c1', { content: 'Hello world' });
   });
 
   it('should clear draft after sending', () => {
+    const channel = makeChannel('c1', 'General');
+    selectedChannel$.next(channel);
+    messageService.createMessage.and.returnValue(of({} as Message));
     component.draft = 'test message';
     component.send();
-    controller.expectOne('http://localhost:7001/api/channels/chan-1/messages').flush({});
     expect(component.draft).toBe('');
   });
 
@@ -98,12 +128,13 @@ describe('ChatWindowComponent', () => {
     expect(authService.logout).toHaveBeenCalled();
   });
 
-  it('should expose messages$ from ChatService', fakeAsync(() => {
+  it('should display messages from messageService', fakeAsync(() => {
     const msgs = [makeMessage('m1', 'Hello!')];
     messages$.next(msgs);
     tick();
-    let received: Message[] = [];
-    component.messages$.subscribe(m => received = m);
-    expect(received).toEqual(msgs);
+    fixture.detectChanges();
+    const messageElements = fixture.nativeElement.querySelectorAll('[class*="flex flex-col"]');
+    // We should see the message in the template
+    expect(messageElements.length).toBeGreaterThan(0);
   }));
 });

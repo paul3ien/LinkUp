@@ -4,7 +4,7 @@
   <!-- Header -->
   <header class="flex items-center justify-between px-6 py-3 border-b bg-white shadow-sm">
     <span class="font-semibold text-gray-700">
-      {{ chatService.currentChannelId ? '# channel' : 'Aucun channel sélectionné' }}
+      {{ (currentChannel$ | async)?.name ? '# ' + (currentChannel$ | async)?.name : 'Aucun channel sélectionné' }}
     </span>
     <button (click)="logout()" class="text-xs text-gray-400 hover:text-red-500 transition">Déconnexion</button>
   </header>
@@ -28,11 +28,11 @@
   <footer class="px-6 py-3 bg-white border-t">
     <div class="flex gap-2">
       <textarea [(ngModel)]="draft" (keydown)="onKeydown($event)"
-        [disabled]="!chatService.currentChannelId"
+        [disabled]="!(currentChannel$ | async)"
         rows="1"
         placeholder="Envoyer un message..."
         class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50"></textarea>
-      <button (click)="send()" [disabled]="!draft.trim() || !chatService.currentChannelId"
+      <button (click)="send()" [disabled]="!draft.trim() || !(currentChannel$ | async)"
         class="bg-primary hover:bg-primary-dark text-white px-4 rounded-lg text-sm font-medium transition disabled:opacity-40">
         Envoyer
       </button>
