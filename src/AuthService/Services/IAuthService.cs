@@ -22,4 +22,9 @@ public interface IAuthService
     /// <param name="password">Mot de passe en clair</param>
     /// <returns>JWT token string ou null si credentials invalides</returns>
     Task<string?> Login(string email, string password);
+
+    /// <summary>
+    /// Get user by email for retrieving userId
+    /// </summary>
+    Task<Models.User?> GetUserByEmail(string email);
 }

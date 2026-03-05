@@ -2,7 +2,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, map } from 'rxjs/operators';
 
 export interface Channel {
   id: string;
@@ -14,6 +14,13 @@ export interface Channel {
 export interface CreateChannelDto {
   name: string;
   description?: string;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  page: number;
+  pageSize: number;
+  total: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -28,7 +35,8 @@ export class ChannelService {
   selectedChannel = this.selectedChannel$.asObservable();
 
   getAllChannels(): Observable<Channel[]> {
-    return this.http.get<Channel[]>(this.API_URL).pipe(
+    return this.http.get<PaginatedResponse<Channel>>(this.API_URL).pipe(
+      map(response => response.data || []),
       tap(channels => this.channels$.next(channels))
     );
   }
@@ -41,7 +49,10 @@ export class ChannelService {
     return this.http.post<Channel>(this.API_URL, data).pipe(
       tap(channel => {
         const current = this.channels$.value;
-        this.channels$.next([...current, channel]);
+        // current is always an array now, safe to spread
+        if (Array.isArray(current)) {
+          this.channels$.next([...current, channel]);
+        }
       })
     );
   }

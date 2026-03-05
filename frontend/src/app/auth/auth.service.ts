@@ -17,7 +17,14 @@ export class AuthService {
   private readonly EMAIL_KEY  = 'lu_email';
 
   register(email: string, password: string): Observable<any> {
-    return this.http.post(`${this.AUTH_URL}/api/auth/register`, { email, password });
+    return this.http.post<LoginResponse>(`${this.AUTH_URL}/api/auth/register`, { email, password }).pipe(
+      tap(res => {
+        // Auto-login after registration
+        localStorage.setItem(this.TOKEN_KEY, res.token);
+        localStorage.setItem(this.USER_KEY, res.userId);
+        localStorage.setItem(this.EMAIL_KEY, email);
+      })
+    );
   }
 
   login(email: string, password: string): Observable<LoginResponse> {

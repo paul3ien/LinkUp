@@ -38,12 +38,16 @@ public class AuthController : ControllerBase
                 return BadRequest("Email and password are required");
 
             var user = await _authService.Register(request.Email, request.Password);
+            // Generate JWT token after registration
+            var token = await _authService.Login(request.Email, request.Password);
             
             return CreatedAtAction(nameof(Register), new { userId = user.Id }, new
             {
-                user.Id,
-                user.Email,
-                message = "User registered successfully"
+                token,
+                userId = user.Id,
+                email = user.Email,
+                tokenType = "Bearer",
+                expiresIn = 3600
             });
         }
         catch (InvalidOperationException ex)
@@ -83,9 +87,15 @@ public class AuthController : ControllerBase
                 return Unauthorized("Invalid email or password");
             }
 
+            // Get user ID from service
+            var user = await _authService.GetUserByEmail(request.Email);
+            var userId = user?.Id.ToString() ?? string.Empty;
+
             return Ok(new
             {
                 token,
+                userId,
+                email = request.Email,
                 tokenType = "Bearer",
                 expiresIn = 3600 // 1 hour in seconds
             });

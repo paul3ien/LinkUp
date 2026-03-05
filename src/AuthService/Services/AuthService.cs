@@ -87,4 +87,12 @@ public class AuthenticationService : IAuthService
         _logger.LogInformation("User logged in: {Email}", email);
         return token;
     }
+
+    /// <summary>
+    /// Get user by email for retrieving user ID
+    /// </summary>
+    public async Task<AuthServiceModels.User?> GetUserByEmail(string email)
+    {
+        return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+    }
 }

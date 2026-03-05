@@ -77,3 +77,13 @@ src/**/obj/Protos/*.cs
 *.tmp
 *.temp
 ~*
+
+specs.csv
+stack.csv
+
+CHANNEL_CREATION_FIX.md
+MESSAGE_SENDING.md
+DOCUMENTATION_STRATEGY.md
+TASKS.md
+WORKFLOW.md
+

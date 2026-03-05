@@ -56,15 +56,14 @@ export class ChannelsListComponent implements OnInit, OnDestroy {
   selectedChannel: Channel | null = null;
 
   ngOnInit(): void {
-    // Load channels
-    this.channelService.getAllChannels().pipe(
-      takeUntil(this.destroy$)
-    ).subscribe();
+    // Load channels on init
+    this.loadChannels();
 
-    // Subscribe to channels
+    // Subscribe to channels updates
     this.channelService.channels.pipe(
       takeUntil(this.destroy$)
     ).subscribe((channels: Channel[]) => {
+      console.log('Canaux reçus:', channels);
       this.channels = channels;
     });
 
@@ -73,6 +72,19 @@ export class ChannelsListComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe((channel: Channel | null) => {
       this.selectedChannel = channel;
+    });
+  }
+
+  private loadChannels(): void {
+    this.channelService.getAllChannels().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (channels) => {
+        console.log('Canaux chargés:', channels);
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des canaux:', err);
+      }
     });
   }
 
@@ -94,9 +106,18 @@ export class ChannelsListComponent implements OnInit, OnDestroy {
     if (!name) return;
     
     const description = prompt('Description (optionnelle):');
+    console.log('🔄 Création du canal:', { name, description });
+    
     this.channelService.createChannel({ name, description: description || undefined }).subscribe({
-      next: () => console.log('Channel créé'),
-      error: (err: any) => alert('Erreur: ' + err.error?.message)
+      next: (channel) => {
+        console.log('✅ Canal créé avec succès:', channel);
+        // Recharger la liste des channels après création
+        this.channelService.getAllChannels().subscribe();
+      },
+      error: (err: any) => {
+        console.error('❌ Erreur création canal:', err);
+        alert('Erreur: ' + (err.error?.message || 'Erreur inconnue'));
+      }
     });
   }
 }
