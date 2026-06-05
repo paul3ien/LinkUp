@@ -2,7 +2,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, map } from 'rxjs/operators';
 
 export interface Message {
   id: string;
@@ -25,7 +25,8 @@ export class MessageService {
   messages = this.messages$.asObservable();
 
   getMessagesByChannelId(channelId: string): Observable<Message[]> {
-    return this.http.get<Message[]>(`${this.API_URL}/${channelId}/messages`).pipe(
+    return this.http.get<any>(`${this.API_URL}/${channelId}/messages`).pipe(
+      map(response => Array.isArray(response) ? response : (response?.data ?? [])),
       tap(messages => this.messages$.next(messages))
     );
   }

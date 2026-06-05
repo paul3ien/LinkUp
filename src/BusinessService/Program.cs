@@ -62,7 +62,12 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // T031: Prevent circular reference serialization (Message → Channel → Messages → ...)
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 
 // T070: CORS Configuration - Allow frontend (all localhost ports) to call this API
 builder.Services.AddCors(options =>
@@ -94,8 +99,6 @@ catch (Exception ex)
 {
     app.Logger.LogError(ex, "Migration failed");
 }
-
-app.UseHttpsRedirection();
 
 // T070: CORS Middleware must come before Authentication/Authorization
 app.UseCors();

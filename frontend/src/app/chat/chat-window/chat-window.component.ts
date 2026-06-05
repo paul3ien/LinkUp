@@ -31,7 +31,10 @@ export class ChatWindowComponent implements OnInit, AfterViewChecked {
     // Load messages when channel changes
     this.currentChannel$.subscribe(channel => {
       if (channel) {
-        this.messageService.getMessagesByChannelId(channel.id);
+        this.messageService.getMessagesByChannelId(channel.id).subscribe({
+          next: msgs => console.log('✅ Messages chargés:', msgs.length),
+          error: err => console.error('❌ Erreur chargement messages:', err)
+        });
       } else {
         this.messageService.clearMessages();
       }
@@ -51,8 +54,11 @@ export class ChatWindowComponent implements OnInit, AfterViewChecked {
 
     if (!this.draft.trim() || !currentChannelId) return;
     const body: SendMessageDto = { content: this.draft };
-    this.messageService.createMessage(currentChannelId, body);
     this.draft = '';
+    this.messageService.createMessage(currentChannelId, body).subscribe({
+      next: msg => console.log('✅ Message envoyé:', msg),
+      error: err => console.error('❌ Erreur envoi message:', err)
+    });
   }
 
   onKeydown(event: KeyboardEvent): void {
