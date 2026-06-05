@@ -27,16 +27,21 @@ export class MessageService {
   getMessagesByChannelId(channelId: string): Observable<Message[]> {
     return this.http.get<any>(`${this.API_URL}/${channelId}/messages`).pipe(
       map(response => Array.isArray(response) ? response : (response?.data ?? [])),
+      map(messages => [...messages].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())),
       tap(messages => this.messages$.next(messages))
     );
   }
 
+  addRealtimeMessage(msg: Message): void {
+    const current = this.messages$.value;
+    if (current.some(m => m.id === msg.id)) return; // dedup
+    const sorted = [...current, msg].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    this.messages$.next(sorted);
+  }
+
   createMessage(channelId: string, data: CreateMessageDto): Observable<Message> {
     return this.http.post<Message>(`${this.API_URL}/${channelId}/messages`, data).pipe(
-      tap(message => {
-        const current = this.messages$.value;
-        this.messages$.next([...current, message]);
-      })
+      tap(message => this.addRealtimeMessage(message))
     );
   }
 

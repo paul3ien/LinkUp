@@ -10,6 +10,9 @@ global using System.Text;
 // T001: BusinessService WebAPI - Minimal APIs (ASP.NET Core 8.0)
 // Responsabilités : Logique métier (Channels, Messages, gRPC Client)
 
+// Allow gRPC over plain HTTP/2 (no TLS) in development
+AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure Kestrel to use port 7001 for HTTP

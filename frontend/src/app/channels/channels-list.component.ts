@@ -23,7 +23,7 @@ import { Subject, takeUntil } from 'rxjs';
           </div>
         }
     
-        @for (channel of channels; track channel) {
+        @for (channel of channels; track channel.id) {
           <div
             (click)="selectChannel(channel)"
             [class.bg-indigo-600]="isSelected(channel)"

@@ -32,7 +32,7 @@ public class MessageService : IMessageService
             var skip = (page - 1) * pageSize;
             var messages = await _context.Messages
                 .Where(m => m.ChannelId == channelId)
-                .OrderByDescending(m => m.CreatedAt)
+                .OrderBy(m => m.CreatedAt)
                 .Skip(skip)
                 .Take(pageSize)
                 .ToListAsync();

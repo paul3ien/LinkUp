@@ -11,7 +11,7 @@
 
   <!-- Messages -->
   <div class="flex-1 overflow-y-auto px-6 py-4 space-y-3">
-    @for (msg of messages$ | async; track msg) {
+    @for (msg of messages$ | async; track msg.id) {
       <div
         class="flex flex-col max-w-xl">
         <span class="text-xs text-gray-400 mb-0.5">{{ msg.userId }}</span>
