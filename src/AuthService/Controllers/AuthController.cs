@@ -1,14 +1,10 @@
 global using Microsoft.AspNetCore.Mvc;
 global using AuthService.Services;
+global using Microsoft.AspNetCore.Authorization;
+global using System.Security.Claims;
 
 namespace AuthService.Controllers;
 
-/// <summary>
-/// T021, T022: Authentification controller
-/// Endpoints : 
-/// - POST /api/auth/register (T021)
-/// - POST /api/auth/login (T022)
-/// </summary>
 [ApiController]
 [Route("api/auth")]
 public class AuthController : ControllerBase
@@ -22,14 +18,7 @@ public class AuthController : ControllerBase
         _logger = logger;
     }
 
-    /// <summary>
-    /// T021: Endpoint POST /api/auth/register
-    /// Créer un nouvel utilisateur avec email et mdp
-    /// </summary>
     [HttpPost("register")]
-    [ProducesResponseType(StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
         try
@@ -38,40 +27,23 @@ public class AuthController : ControllerBase
                 return BadRequest("Email and password are required");
 
             var user = await _authService.Register(request.Email, request.Password);
-            // Generate JWT token after registration
             var token = await _authService.Login(request.Email, request.Password);
-            
+
             return CreatedAtAction(nameof(Register), new { userId = user.Id }, new
             {
                 token,
                 userId = user.Id,
                 email = user.Email,
+                username = user.Username,
                 tokenType = "Bearer",
                 expiresIn = 3600
             });
         }
-        catch (InvalidOperationException ex)
-        {
-            _logger.LogWarning("Registration failed: {Message}", ex.Message);
-            return Conflict(ex.Message);
-        }
-        catch (ArgumentException ex)
-        {
-            _logger.LogWarning("Invalid registration data: {Message}", ex.Message);
-            return BadRequest(ex.Message);
-        }
+        catch (InvalidOperationException ex) { return Conflict(ex.Message); }
+        catch (ArgumentException ex) { return BadRequest(ex.Message); }
     }
 
-    /// <summary>
-    /// T022: Endpoint POST /api/auth/login
-    /// Authentifier et retourner JWT token
-    /// Token contient : sub (userId), email, role
-    /// Expiration : 1h
-    /// </summary>
     [HttpPost("login")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         try
@@ -80,24 +52,18 @@ public class AuthController : ControllerBase
                 return BadRequest("Email and password are required");
 
             var token = await _authService.Login(request.Email, request.Password);
-            
-            if (token == null)
-            {
-                _logger.LogWarning("Login failed for email: {Email}", request.Email);
-                return Unauthorized("Invalid email or password");
-            }
+            if (token == null) return Unauthorized("Invalid email or password");
 
-            // Get user ID from service
             var user = await _authService.GetUserByEmail(request.Email);
-            var userId = user?.Id.ToString() ?? string.Empty;
 
             return Ok(new
             {
                 token,
-                userId,
-                email = request.Email,
+                userId = user!.Id,
+                email = user.Email,
+                username = user.Username,
                 tokenType = "Bearer",
-                expiresIn = 3600 // 1 hour in seconds
+                expiresIn = 3600
             });
         }
         catch (Exception ex)
@@ -106,22 +72,64 @@ public class AuthController : ControllerBase
             return StatusCode(500, "An error occurred during login");
         }
     }
+
+    [HttpGet("profile")]
+    [Authorize]
+    public async Task<IActionResult> GetProfile()
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var user = await _authService.GetUserById(userId);
+        if (user == null) return NotFound();
+
+        return Ok(new { userId = user.Id, email = user.Email, username = user.Username });
+    }
+
+    /// <summary>Public – resolve userId to username for chat display</summary>
+    [HttpGet("users/{userId:guid}/username")]
+    public async Task<IActionResult> GetUsername(Guid userId)
+    {
+        var user = await _authService.GetUserById(userId);
+        if (user == null) return NotFound();
+        return Ok(new { username = user.Username });
+    }
+
+    [HttpPut("profile/username")]
+    [Authorize]
+    public async Task<IActionResult> ChangeUsername([FromBody] ChangeUsernameRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Username))
+            return BadRequest("Username is required");
+
+        try
+        {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var user = await _authService.ChangeUsername(userId, request.Username);
+            return Ok(new { username = user.Username });
+        }
+        catch (InvalidOperationException ex) { return Conflict(ex.Message); }
+        catch (ArgumentException ex) { return BadRequest(ex.Message); }
+    }
+
+    [HttpPut("profile/password")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.CurrentPassword) || string.IsNullOrWhiteSpace(request.NewPassword))
+            return BadRequest("Both current and new password are required");
+
+        try
+        {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            await _authService.ChangePassword(userId, request.CurrentPassword, request.NewPassword);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex) { return BadRequest(ex.Message); }
+        catch (ArgumentException ex) { return BadRequest(ex.Message); }
+    }
 }
 
-/// <summary>
-/// T021: DTO pour registration request
-/// </summary>
-public class RegisterRequest
-{
-    public string Email { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-}
+public class RegisterRequest { public string Email { get; set; } = string.Empty; public string Password { get; set; } = string.Empty; }
+public class LoginRequest { public string Email { get; set; } = string.Empty; public string Password { get; set; } = string.Empty; }
+public class ChangeUsernameRequest { public string Username { get; set; } = string.Empty; }
+public class ChangePasswordRequest { public string CurrentPassword { get; set; } = string.Empty; public string NewPassword { get; set; } = string.Empty; }
 
-/// <summary>
-/// T022: DTO pour login request
-/// </summary>
-public class LoginRequest
-{
-    public string Email { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-}

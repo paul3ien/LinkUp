@@ -51,7 +51,7 @@ export class LoginComponent {
     this.error = '';
     this.auth.login(this.email, this.password).subscribe({
       next: () => {
-        this.router.navigate(['/chat']);
+        this.router.navigate(['/profile']);
       },
       error: (err) => {
         this.error = err.error?.message || 'Email ou mot de passe invalide.';
@@ -76,7 +76,7 @@ export class LoginComponent {
     this.auth.register(this.email, this.password).subscribe({
       next: () => {
         this.success = 'Compte créé ! Connexion en cours...';
-        setTimeout(() => this.login(), 1500);
+        setTimeout(() => this.router.navigate(['/profile']), 1000);
       },
       error: (err) => {
         this.error = err.error?.message || 'Erreur lors de la création du compte. Email peut être déjà utilisé.';

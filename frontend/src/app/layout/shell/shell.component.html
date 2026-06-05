@@ -1,7 +1,8 @@
-<!-- T054/T071: Two-column layout -->
+<!-- T054/T071: Two-column layout with router outlet -->
 <div class="flex h-screen bg-gray-50">
   <app-channels-list class="w-64 shrink-0" />
-  <main class="flex-1 overflow-hidden">
-    <app-chat-window />
+  <main class="flex-1 overflow-y-auto">
+    <router-outlet />
   </main>
 </div>
+

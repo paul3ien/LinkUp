@@ -14,7 +14,7 @@
     @for (msg of messages$ | async; track msg.id) {
       <div
         class="flex flex-col max-w-xl">
-        <span class="text-xs text-gray-400 mb-0.5">{{ msg.userId }}</span>
+        <span class="text-xs text-gray-400 mb-0.5">{{ displayName(msg.userId) }}</span>
         <div class="bg-white rounded-xl px-4 py-2 shadow-sm text-sm text-gray-800 border border-gray-100">
           {{ msg.content }}
         </div>

@@ -27,4 +27,8 @@ public interface IAuthService
     /// Get user by email for retrieving userId
     /// </summary>
     Task<Models.User?> GetUserByEmail(string email);
+
+    Task<Models.User?> GetUserById(Guid userId);
+    Task<Models.User> ChangeUsername(Guid userId, string newUsername);
+    Task ChangePassword(Guid userId, string currentPassword, string newPassword);
 }

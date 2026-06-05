@@ -4,6 +4,19 @@ global using AuthServiceModels = AuthService.Models;
 
 namespace AuthService.Services;
 
+/// <summary>Word pool for auto-generated usernames (word + 4-digit number)</summary>
+internal static class UsernameWordPool
+{
+    internal static readonly string[] Words =
+    [
+        "Dragon", "Phoenix", "Wolf", "Tiger", "Eagle", "Falcon", "Shadow", "Storm",
+        "Blaze", "Frost", "Viper", "Hawk", "Raven", "Cobra", "Lynx", "Panda",
+        "Comet", "Nova", "Pixel", "Neon", "Pulse", "Spark", "Volt", "Glitch",
+        "Nebula", "Orbit", "Quasar", "Zenith", "Apex", "Cipher", "Echo", "Flux",
+        "Ghost", "Hyper", "Icon", "Jade", "Karma", "Laser", "Mirage", "Nexus"
+    ];
+}
+
 /// <summary>
 /// T021, T022: Authentification service
 /// Responsabilités : Registration (BCrypt), Login (password validation)
@@ -43,12 +56,16 @@ public class AuthenticationService : IAuthService
         // T021: Hasher mdp avec BCrypt
         var passwordHash = BC.HashPassword(password);
 
+        // Générer pseudo unique
+        var username = await GenerateUniqueUsernameAsync();
+
         // Créer entity
         var user = new AuthServiceModels.User
         {
             Id = Guid.NewGuid(),
             Email = email,
             PasswordHash = passwordHash,
+            Username = username,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -82,7 +99,7 @@ public class AuthenticationService : IAuthService
             return null;
 
         // Générer token JWT
-        var token = _jwtService.GenerateToken(user.Id, user.Email, "user");
+        var token = _jwtService.GenerateToken(user.Id, user.Email, user.Username, "user");
 
         _logger.LogInformation("User logged in: {Email}", email);
         return token;
@@ -94,5 +111,63 @@ public class AuthenticationService : IAuthService
     public async Task<AuthServiceModels.User?> GetUserByEmail(string email)
     {
         return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+    }
+
+    public async Task<AuthServiceModels.User?> GetUserById(Guid userId)
+    {
+        return await _context.Users.FindAsync(userId);
+    }
+
+    public async Task<AuthServiceModels.User> ChangeUsername(Guid userId, string newUsername)
+    {
+        if (string.IsNullOrWhiteSpace(newUsername) || newUsername.Length > 50)
+            throw new ArgumentException("Invalid username");
+
+        // Check uniqueness
+        var taken = await _context.Users.AnyAsync(u => u.Username == newUsername && u.Id != userId);
+        if (taken)
+            throw new InvalidOperationException("Username already taken");
+
+        var user = await _context.Users.FindAsync(userId)
+            ?? throw new InvalidOperationException("User not found");
+
+        user.Username = newUsername;
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Username changed for user {UserId}: {Username}", userId, newUsername);
+        return user;
+    }
+
+    public async Task ChangePassword(Guid userId, string currentPassword, string newPassword)
+    {
+        if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 6)
+            throw new ArgumentException("New password must be at least 6 characters");
+
+        var user = await _context.Users.FindAsync(userId)
+            ?? throw new InvalidOperationException("User not found");
+
+        if (!BC.Verify(currentPassword, user.PasswordHash))
+            throw new InvalidOperationException("Current password is incorrect");
+
+        user.PasswordHash = BC.HashPassword(newPassword);
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Password changed for user {UserId}", userId);
+    }
+
+    // ── private helpers ──────────────────────────────────────────────────────
+
+    private async Task<string> GenerateUniqueUsernameAsync()
+    {
+        string username;
+        do
+        {
+            var word = UsernameWordPool.Words[Random.Shared.Next(UsernameWordPool.Words.Length)];
+            var number = Random.Shared.Next(1000, 10000);
+            username = $"{word}{number}";
+        }
+        while (await _context.Users.AnyAsync(u => u.Username == username));
+
+        return username;
     }
 }

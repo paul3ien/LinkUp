@@ -15,7 +15,7 @@ public interface IJwtService
     /// <param name="email">Email utilisateur</param>
     /// <param name="role">Rôle utilisateur (défaut: "user")</param>
     /// <returns>JWT token string</returns>
-    string GenerateToken(Guid userId, string email, string role = "user");
+    string GenerateToken(Guid userId, string email, string username, string role = "user");
 
     /// <summary>
     /// T022: Valider un token JWT et extraire les claims

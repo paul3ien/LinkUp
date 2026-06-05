@@ -50,6 +50,25 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 builder.Services.AddLogging();
 
+// T022: JWT Bearer authentication so [Authorize] endpoints work
+var jwtSection = builder.Configuration.GetSection("Jwt");
+var secretKey = jwtSection["SecretKey"]!;
+builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(secretKey)),
+            ValidateIssuer = true,
+            ValidIssuer = jwtSection["Issuer"] ?? "LinkUp",
+            ValidateAudience = true,
+            ValidAudience = jwtSection["Audience"] ?? "LinkUpClients",
+            ValidateLifetime = true
+        };
+    });
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
 
 // T010: Auto-apply migrations on startup for development
@@ -66,8 +85,6 @@ catch (Exception ex)
     app.Logger.LogError(ex, "Migration failed");
 }
 
-app.UseHttpsRedirection();
-// T070: CORS Middleware must come before Authentication/Authorization
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();

@@ -13,10 +13,21 @@ const authGuard = () => {
 export const routes: Routes = [
   { path: 'login', loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent) },
   {
-    path: 'chat',
+    path: '',
     canActivate: [authGuard],
-    loadComponent: () => import('./layout/shell/shell.component').then(m => m.ShellComponent)
+    loadComponent: () => import('./layout/shell/shell.component').then(m => m.ShellComponent),
+    children: [
+      {
+        path: 'profile',
+        loadComponent: () => import('./profile/profile.component').then(m => m.ProfileComponent)
+      },
+      {
+        path: 'chat',
+        loadComponent: () => import('./chat/chat-window/chat-window.component').then(m => m.ChatWindowComponent)
+      },
+      { path: '', redirectTo: 'profile', pathMatch: 'full' }
+    ]
   },
-  { path: '', redirectTo: '/chat', pathMatch: 'full' },
   { path: '**', redirectTo: '/login' }
 ];
+

@@ -34,7 +34,7 @@ public class JwtService : IJwtService
     /// Claims : sub (userId), email, role
     /// Expiration : 1h (configurable)
     /// </summary>
-    public string GenerateToken(Guid userId, string email, string role = "user")
+    public string GenerateToken(Guid userId, string email, string username, string role = "user")
     {
         // T022: SymmetricSecurityKey
         var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_secretKey));
@@ -45,7 +45,8 @@ public class JwtService : IJwtService
         {
             new Claim(ClaimTypes.NameIdentifier, userId.ToString()),  // sub
             new Claim(ClaimTypes.Email, email),                       // email
-            new Claim(ClaimTypes.Role, role)                          // role
+            new Claim(ClaimTypes.Role, role),                         // role
+            new Claim("username", username)                           // pseudo
         };
 
         // T022: Exiration 1h

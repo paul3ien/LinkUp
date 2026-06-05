@@ -1,13 +1,13 @@
 // T071: Channels List Component - Sidebar with channel list
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
-
+import { Router, RouterLink } from '@angular/router';
 import { ChannelService, Channel } from '../services/channel.service';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-channels-list',
   standalone: true,
-  imports: [],
+  imports: [RouterLink],
   template: `
     <div class="h-full flex flex-col bg-gray-900 text-white">
       <!-- Header -->
@@ -38,8 +38,12 @@ import { Subject, takeUntil } from 'rxjs';
         }
       </div>
     
-      <!-- New Channel Button -->
-      <div class="p-4 border-t border-gray-700">
+      <!-- Footer: profile link -->
+      <div class="p-4 border-t border-gray-700 flex flex-col gap-2">
+        <a routerLink="/profile"
+           class="block text-center text-sm text-gray-300 hover:text-white transition py-1 rounded hover:bg-gray-800">
+          👤 Mon profil
+        </a>
         <button (click)="createNewChannel()"
           class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-lg transition">
           + Nouveau channel
@@ -56,6 +60,7 @@ import { Subject, takeUntil } from 'rxjs';
 })
 export class ChannelsListComponent implements OnInit, OnDestroy {
   private channelService = inject(ChannelService);
+  private router = inject(Router);
   private destroy$ = new Subject<void>();
 
   channels: Channel[] = [];
@@ -101,6 +106,7 @@ export class ChannelsListComponent implements OnInit, OnDestroy {
 
   selectChannel(channel: Channel): void {
     this.channelService.selectChannel(channel);
+    this.router.navigate(['/chat']);
   }
 
   isSelected(channel: Channel): boolean {
