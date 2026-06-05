@@ -11,16 +11,20 @@
 
   <!-- Messages -->
   <div class="flex-1 overflow-y-auto px-6 py-4 space-y-3">
-    <div *ngFor="let msg of messages$ | async"
-      class="flex flex-col max-w-xl">
-      <span class="text-xs text-gray-400 mb-0.5">{{ msg.userId }}</span>
-      <div class="bg-white rounded-xl px-4 py-2 shadow-sm text-sm text-gray-800 border border-gray-100">
-        {{ msg.content }}
+    @for (msg of messages$ | async; track msg) {
+      <div
+        class="flex flex-col max-w-xl">
+        <span class="text-xs text-gray-400 mb-0.5">{{ msg.userId }}</span>
+        <div class="bg-white rounded-xl px-4 py-2 shadow-sm text-sm text-gray-800 border border-gray-100">
+          {{ msg.content }}
+        </div>
       </div>
-    </div>
-    <div *ngIf="(messages$ | async)?.length === 0" class="text-center text-gray-400 text-sm mt-10">
-      Aucun message. Soyez le premier !
-    </div>
+    }
+    @if ((messages$ | async)?.length === 0) {
+      <div class="text-center text-gray-400 text-sm mt-10">
+        Aucun message. Soyez le premier !
+      </div>
+    }
     <div #bottom></div>
   </div>
 
@@ -31,7 +35,7 @@
         [disabled]="!(currentChannel$ | async)"
         rows="1"
         placeholder="Envoyer un message..."
-        class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50"></textarea>
+      class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50"></textarea>
       <button (click)="send()" [disabled]="!draft.trim() || !(currentChannel$ | async)"
         class="bg-primary hover:bg-primary-dark text-white px-4 rounded-lg text-sm font-medium transition disabled:opacity-40">
         Envoyer

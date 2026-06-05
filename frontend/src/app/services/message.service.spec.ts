@@ -1,7 +1,8 @@
 // T071: Tests for MessageService
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { MessageService, Message } from './message.service';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('MessageService', () => {
   let service: MessageService;
@@ -10,9 +11,9 @@ describe('MessageService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
-      providers: [MessageService]
-    });
+    imports: [],
+    providers: [MessageService, provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+});
     service = TestBed.inject(MessageService);
     controller = TestBed.inject(HttpTestingController);
   });

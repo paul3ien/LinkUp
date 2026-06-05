@@ -1,6 +1,6 @@
 // T054: Sidebar – lists channels from REST API, selects active channel
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { HttpClient } from '@angular/common/http';
 import { ChatService } from '../../chat/chat.service';
 
@@ -9,7 +9,7 @@ export interface Channel { id: string; name: string; description: string; }
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.css'
 })

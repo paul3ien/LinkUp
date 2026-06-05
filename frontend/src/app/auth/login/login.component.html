@@ -26,18 +26,24 @@
       </div>
 
       <!-- Confirm Password (Register only) -->
-      <div *ngIf="isRegistering">
-        <label class="block text-sm font-medium text-gray-600 mb-1" for="passwordConfirm">Confirmer mot de passe</label>
-        <input id="passwordConfirm" type="password" name="passwordConfirm" [(ngModel)]="passwordConfirm" required
-          class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-          placeholder="••••••••" />
-      </div>
+      @if (isRegistering) {
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1" for="passwordConfirm">Confirmer mot de passe</label>
+          <input id="passwordConfirm" type="password" name="passwordConfirm" [(ngModel)]="passwordConfirm" required
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+            placeholder="••••••••" />
+        </div>
+      }
 
       <!-- Error Message -->
-      <div *ngIf="error" class="text-red-500 text-sm bg-red-50 p-3 rounded-lg">{{ error }}</div>
+      @if (error) {
+        <div class="text-red-500 text-sm bg-red-50 p-3 rounded-lg">{{ error }}</div>
+      }
 
       <!-- Success Message -->
-      <div *ngIf="success" class="text-green-600 text-sm bg-green-50 p-3 rounded-lg">{{ success }}</div>
+      @if (success) {
+        <div class="text-green-600 text-sm bg-green-50 p-3 rounded-lg">{{ success }}</div>
+      }
 
       <!-- Submit Button -->
       <button type="submit" [disabled]="loading"
@@ -58,14 +64,16 @@
     </div>
 
     <!-- Test Credentials -->
-    <div *ngIf="!isRegistering" class="mt-6 pt-6 border-t border-gray-200">
-      <p class="text-xs text-gray-500 text-center mb-3">Comptes de test :</p>
-      <div class="space-y-2">
-        <div class="text-xs bg-gray-50 p-2 rounded text-gray-600">
-          <strong>Email:</strong> test&#64;example.com<br/>
-          <strong>Mdp:</strong> SecurePass123!
+    @if (!isRegistering) {
+      <div class="mt-6 pt-6 border-t border-gray-200">
+        <p class="text-xs text-gray-500 text-center mb-3">Comptes de test :</p>
+        <div class="space-y-2">
+          <div class="text-xs bg-gray-50 p-2 rounded text-gray-600">
+            <strong>Email:</strong> test&#64;example.com<br/>
+            <strong>Mdp:</strong> SecurePass123!
+          </div>
         </div>
       </div>
-    </div>
+    }
   </div>
 </div>

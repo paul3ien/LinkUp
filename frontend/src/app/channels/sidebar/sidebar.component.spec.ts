@@ -1,8 +1,9 @@
 // T054: Tests for SidebarComponent
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { SidebarComponent, Channel } from './sidebar.component';
 import { ChatService } from '../../chat/chat.service';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('SidebarComponent', () => {
   let component: SidebarComponent;
@@ -14,9 +15,9 @@ describe('SidebarComponent', () => {
     chatService = jasmine.createSpyObj('ChatService', ['joinChannel'], { currentChannelId: null });
 
     await TestBed.configureTestingModule({
-      imports: [SidebarComponent, HttpClientTestingModule],
-      providers: [{ provide: ChatService, useValue: chatService }]
-    }).compileComponents();
+    imports: [SidebarComponent],
+    providers: [{ provide: ChatService, useValue: chatService }, provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+}).compileComponents();
 
     fixture = TestBed.createComponent(SidebarComponent);
     component = fixture.componentInstance;

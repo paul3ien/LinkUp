@@ -7,14 +7,18 @@
   <nav class="flex-1 overflow-y-auto py-3">
     <p class="px-4 text-xs uppercase tracking-widest text-indigo-400 mb-2">Channels</p>
     <ul>
-      <li *ngFor="let ch of channels">
-        <button (click)="selectChannel(ch)"
-          [class.bg-indigo-700]="isActive(ch)"
-          class="w-full text-left px-4 py-2 text-sm hover:bg-indigo-800 transition flex items-center gap-2">
-          <span class="text-indigo-300">#</span> {{ ch.name }}
-        </button>
-      </li>
+      @for (ch of channels; track ch) {
+        <li>
+          <button (click)="selectChannel(ch)"
+            [class.bg-indigo-700]="isActive(ch)"
+            class="w-full text-left px-4 py-2 text-sm hover:bg-indigo-800 transition flex items-center gap-2">
+            <span class="text-indigo-300">#</span> {{ ch.name }}
+          </button>
+        </li>
+      }
     </ul>
-    <p *ngIf="channels.length === 0" class="px-4 text-xs text-indigo-400 mt-4">Aucun channel</p>
+    @if (channels.length === 0) {
+      <p class="px-4 text-xs text-indigo-400 mt-4">Aucun channel</p>
+    }
   </nav>
 </aside>

@@ -1,10 +1,11 @@
 // T052: Tests for AuthService
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Router } from '@angular/router';
 import { Component } from '@angular/core';
 import { AuthService } from './auth.service';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 @Component({ standalone: true, template: '' })
 class DummyComponent {}
@@ -16,14 +17,12 @@ describe('AuthService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [
-        HttpClientTestingModule,
-        RouterTestingModule.withRoutes([
-          { path: 'login', component: DummyComponent },
-          { path: '**', component: DummyComponent }
-        ])
-      ]
-    });
+    imports: [RouterTestingModule.withRoutes([
+            { path: 'login', component: DummyComponent },
+            { path: '**', component: DummyComponent }
+        ])],
+    providers: [provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+});
     service = TestBed.inject(AuthService);
     http = TestBed.inject(HttpTestingController);
     router = TestBed.inject(Router);

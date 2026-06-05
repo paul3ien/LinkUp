@@ -1,7 +1,8 @@
 // T071: Tests for ChannelService
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ChannelService, Channel, PaginatedResponse } from './channel.service';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('ChannelService', () => {
   let service: ChannelService;
@@ -10,9 +11,9 @@ describe('ChannelService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
-      providers: [ChannelService]
-    });
+    imports: [],
+    providers: [ChannelService, provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+});
     service = TestBed.inject(ChannelService);
     controller = TestBed.inject(HttpTestingController);
   });
