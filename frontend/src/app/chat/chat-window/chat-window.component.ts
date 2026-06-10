@@ -44,12 +44,16 @@ export class ChatWindowComponent implements OnInit, AfterViewChecked, OnDestroy 
       this.userNames[myId] = myName;
     }
 
+    // Resolve usernames for every message batch (REST + real-time gRPC)
+    this.messageService.messages.pipe(takeUntil(this.destroy$)).subscribe(msgs => {
+      this.resolveUsernames([...new Set(msgs.map(m => m.userId))]);
+    });
+
     this.currentChannel$.pipe(takeUntil(this.destroy$)).subscribe(channel => {
       if (channel) {
         this.messageService.getMessagesByChannelId(channel.id).subscribe({
           next: msgs => {
             console.log('✅ Messages chargés:', msgs.length);
-            this.resolveUsernames([...new Set(msgs.map(m => m.userId))]);
           },
           error: err => console.error('❌ Erreur chargement messages:', err)
         });
@@ -112,5 +116,3 @@ export class ChatWindowComponent implements OnInit, AfterViewChecked, OnDestroy 
 
   logout(): void { this.auth.logout(); }
 }
-
-
